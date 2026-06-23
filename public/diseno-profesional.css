@@ -1,0 +1,296 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+:root {
+    /* Paleta de colores Premium Oscura (Estilo Linear.app / Obsidian) */
+    --bg-main: #0b0b0f;
+    --bg-surface: #13131a;
+    --bg-surface-elevated: #1c1c26;
+    --border-color: rgba(255, 255, 255, 0.06);
+    --border-hover: rgba(168, 85, 247, 0.4);
+    
+    /* Textos */
+    --text-primary: #ffffff;
+    --text-secondary: #94a3b8;
+    
+    /* Acentos Gamificados */
+    --accent-purple: #a855f7;
+    --accent-purple-glow: rgba(168, 85, 247, 0.25);
+    --accent-gold: #f59e0b;
+    --accent-gold-glow: rgba(245, 158, 11, 0.25);
+    --accent-green: #10b981;
+}
+
+body {
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* 🧙‍♂️ DASHBOARD DE ESTADO PREMIUM */
+.player-dashboard {
+    background-color: var(--bg-surface);
+    padding: 24px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+}
+
+.profile-info { 
+    display: flex; 
+    align-items: center; 
+    gap: 16px; 
+}
+
+.avatar { 
+    font-size: 2.2rem; 
+    background: var(--bg-surface-elevated);
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+}
+
+.profile-info h2 {
+    margin: 0;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.level-badge { 
+    background: rgba(168, 85, 247, 0.1);
+    padding: 4px 12px; 
+    border-radius: 8px; 
+    font-weight: 600; 
+    font-size: 0.85rem; 
+    margin-top: 6px;
+    display: inline-block;
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stats { 
+    display: flex; 
+    align-items: center; 
+    gap: 32px; 
+    width: 450px; 
+}
+
+.stat-bar-container { 
+    flex-grow: 1;
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+}
+
+.stat-label { 
+    font-size: 0.8rem; 
+    font-weight: 700; 
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.stat-bar { 
+    background: #000000; 
+    height: 10px; 
+    border-radius: 99px; 
+    overflow: hidden; 
+    border: 1px solid var(--border-color);
+}
+
+.fill.xp { 
+    background: linear-gradient(90deg, #8b5cf6, #d946ef); 
+    height: 100%; 
+    border-radius: 99px;
+    box-shadow: 0 0 15px var(--accent-purple-glow);
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1); 
+}
+
+.gold-container { 
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; 
+    color: var(--accent-gold); 
+    font-size: 1.3rem; 
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(245, 158, 11, 0.05);
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(245, 158, 11, 0.1);
+}
+
+/* ⚔️ ESTRUCTURA DE PANELES */
+.main-container { 
+    padding: 40px 20px; 
+    display: grid; 
+    grid-template-columns: 1.6fr 1fr; 
+    gap: 32px; 
+    max-width: 1200px; 
+    margin: 0 auto; 
+}
+
+@media (max-width: 992px) { 
+    .main-container { grid-template-columns: 1fr; } 
+}
+
+section { 
+    background-color: var(--bg-surface); 
+    padding: 32px; 
+    border-radius: 16px; 
+    border: 1px solid var(--border-color);
+}
+
+section h3 {
+    margin-top: 0;
+    margin-bottom: 24px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ➕ INPUTS MODERNOS */
+.habit-form { 
+    display: flex; 
+    gap: 12px; 
+    margin-bottom: 28px; 
+}
+
+.habit-form input, .habit-form select, .habit-form button {
+    padding: 14px 18px; 
+    border: 1px solid var(--border-color); 
+    border-radius: 12px; 
+    background: var(--bg-surface-elevated); 
+    color: white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.habit-form input:focus, .habit-form select:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+}
+
+.habit-form input { flex-grow: 1; }
+
+.habit-form button { 
+    background: #ffffff; 
+    color: #000000;
+    font-weight: 600; 
+    cursor: pointer;
+    border: none;
+}
+
+.habit-form button:hover {
+    background: #f3f4f6;
+    transform: translateY(-1px);
+}
+
+/* 📜 TARJETAS DE HÁBITOS (FEEDBACK ULTRA LIMPIO) */
+.habits-list { 
+    list-style: none; 
+    padding: 0; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px; 
+}
+
+.habit-item {
+    background: var(--bg-surface-elevated); 
+    padding: 20px; 
+    border-radius: 12px;
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.habit-item:hover {
+    border-color: var(--border-hover);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+.habit-item strong {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.habit-btn { 
+    background: rgba(16, 185, 129, 0.1); 
+    border: 1px solid rgba(16, 185, 129, 0.2); 
+    padding: 10px 20px; 
+    color: var(--accent-green); 
+    border-radius: 10px; 
+    font-weight: 600; 
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer; 
+    transition: all 0.2s ease;
+}
+
+.habit-btn:hover {
+    background: var(--accent-green);
+    color: #000000;
+    border-color: var(--accent-green);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+/* 🏪 TIENDA ELEVADA */
+.shop-items { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px; 
+}
+
+.shop-item { 
+    background: var(--bg-surface-elevated); 
+    padding: 18px; 
+    border-radius: 12px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    border: 1px solid var(--border-color);
+}
+
+.shop-item span {
+    font-weight: 500;
+    color: #e2e8f0;
+}
+
+.btn-buy { 
+    background: rgba(245, 158, 11, 0.1); 
+    border: 1px solid rgba(245, 158, 11, 0.2); 
+    color: var(--accent-gold); 
+    padding: 10px 16px; 
+    border-radius: 10px; 
+    cursor: pointer; 
+    font-weight: 600;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: all 0.2s ease;
+}
+
+.btn-buy:hover {
+    background: var(--accent-gold);
+    color: #000000;
+    border-color: var(--accent-gold);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
