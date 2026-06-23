@@ -1,20 +1,18 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// Middlewares
-app.use(cors());          // Permite que el Frontend se conecte desde otro origen
-app.use(express.json());  // Permite que el servidor entienda datos en formato JSON
+// 1. Middlewares
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
 
-// Ruta de prueba
-app.get('/', (req, res) => {
-  res.json({ mensaje: "¡Bienvenido a la API del Gestor de Hábitos Gamificado! 🎮" });
-});
+// 2. Rutas
+const habitRoutes = require('./routes/habitRoutes');
+app.use('/api/habits', habitRoutes);
 
-// Iniciar el servidor
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo exitosamente en el puerto ${PORT}`);
+// 3. Encender Servidor
+app.listen(5000, () => {
+  console.log("✅ Servidor corriendo en el puerto 5000");
 });
