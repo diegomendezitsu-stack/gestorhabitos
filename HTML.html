@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HabitLife - Gestor Inteligente de Hábitos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <main class="app-container">
+        <section id="step-register" class="card active">
+            <h2>Comienza tu cambio</h2>
+            <p class="subtitle">Introduce tus datos básicos para personalizar tu experiencia.</p>
+            <form id="form-register">
+                <div class="form-group">
+                    <label for="name">Nombre Completo</label>
+                    <input type="text" id="name" required placeholder="Ej. Juan Pérez">
+                </div>
+                <div class="form-group">
+                    <label for="age">Edad</label>
+                    <input type="number" id="age" min="15" max="100" required placeholder="Ej. 28">
+                </div>
+                <button type="submit" class="btn">Continuar</button>
+            </form>
+        </section>
+
+        <section id="step-quiz" class="card">
+            <h2>Cuéntanos sobre ti</h2>
+            <p class="subtitle">Analizaremos tus respuestas para diseñar tu plan óptimo.</p>
+            <form id="form-quiz">
+                <div class="form-group">
+                    <label for="goal">¿Cuál es tu objetivo principal?</label>
+                    <select id="goal" required>
+                        <option value="perder_peso">Perder Peso & Grasa</option>
+                        <option value="ganar_musculo">Ganar Masa Muscular</option>
+                        <option value="vida_saludable">Estilo de Vida Saludable</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="activity">Nivel de actividad física diario</label>
+                    <select id="activity" required>
+                        <option value="sedentario">Sedentario (Poco o nada de ejercicio)</option>
+                        <option value="moderado">Moderado (Ejercicio 3 veces por semana)</option>
+                        <option value="activo">Muy Activo (Ejercicio intenso diario)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">Generar Mi Plan</button>
+            </form>
+        </section>
+
+        <section id="step-dashboard" class="card wide">
+            <header class="dashboard-header">
+                <div>
+                    <h1>¡Hola, <span id="user-welcome">Usuario</span>!</h1>
+                    <p>Este es tu plan personalizado basado en tus objetivos.</p>
+                </div>
+                <button id="btn-restart" class="btn btn-secondary">Reiniciar</button>
+            </header>
+
+            <div class="dashboard-grid">
+                <div class="panel">
+                    <h3><span class="icon">🎯</span> Hábitos Recomendados</h3>
+                    <ul id="habits-list" class="list-items">
+                        </ul>
+                </div>
+
+                <div class="panel">
+                    <h3><span class="icon">🥗</span> Plan de Alimentación</h3>
+                    <ul id="diet-list" class="list-items">
+                        </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
