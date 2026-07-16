@@ -7,14 +7,16 @@ const pool = new Pool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
   database: process.env.DB_NAME,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
-// Probar la conexión al iniciar
 pool.query('SELECT NOW()', (err, res) => {
   if (err) {
-    console.error('❌ Error al conectar a PostgreSQL:', err.stack);
+    console.error('Error al conectar a Supabase PostgreSQL:', err.stack);
   } else {
-    console.log('✅ Conexión exitosa a PostgreSQL realizada en:', res.rows[0].now);
+    console.log('Conexion exitosa a Supabase PostgreSQL:', res.rows[0].now);
   }
 });
 

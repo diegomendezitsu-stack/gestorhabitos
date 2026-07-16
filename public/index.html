@@ -8,57 +8,100 @@
 </head>
 <body>
 
-    <header class="player-dashboard">
-        <div class="profile-info">
-            <div class="avatar">🧙‍♂️</div>
-            <div>
-                <h2 id="player-name">Cargando Jugador...</h2>
-                <div class="level-badge">Nivel <span id="player-level">1</span></div>
+    <!-- PANTALLA DE AUTENTICACIÓN -->
+    <div id="auth-screen" class="auth-screen">
+        <div class="auth-card">
+            <div class="auth-header">
+                <span class="auth-icon">🧙‍♂️</span>
+                <h1>HabitLife</h1>
+                <p>Gestor Inteligente de Hábitos</p>
             </div>
-        </div>
-        
-        <div class="stats">
-            <div class="stat-bar-container">
-                <span class="stat-label">XP: <span id="xp-text">0/100</span></span>
-                <div class="stat-bar"><div id="xp-fill" class="fill xp" style="width: 0%"></div></div>
-            </div>
-            <div class="gold-container">
-                <span class="gold-icon">🪙</span> <span id="player-gold">0</span> Oro
-            </div>
-        </div>
-    </header>
 
-    <main class="main-container">
-        <section class="habits-section">
-            <h3>⚔️ Tus Misiones Diarias (Hábitos)</h3>
-            
-            <form id="habit-form" class="habit-form">
-                <input type="text" id="habit-name" placeholder="Nueva misión (ej: Leer 15 min)" required>
-                <select id="habit-difficulty">
-                    <option value="FACIL">Fácil (10 XP)</option>
-                    <option value="MEDIA">Media (20 XP)</option>
-                    <option value="DIFICIL">Difícil (40 XP)</option>
-                </select>
-                <button type="submit">+ Añadir</button>
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Iniciar Sesión</button>
+                <button class="auth-tab" data-tab="register">Registrarse</button>
+            </div>
+
+            <form id="login-form" class="auth-form">
+                <input type="email" id="login-email" placeholder="Email" required>
+                <input type="password" id="login-password" placeholder="Contraseña" required>
+                <button type="submit" class="auth-submit">Entrar</button>
+                <div id="login-error" class="auth-error"></div>
             </form>
-            <ul id="habits-list" class="habits-list">
-                </ul>
-        </section>
 
-        <section class="shop-section">
-            <h3>🏪 Tienda de Recompensas</h3>
-            <div class="shop-items">
-                <div class="shop-item">
-                    <span>📺 Ver 1 capítulo de Netflix</span>
-                    <button class="btn-buy">🪙 30 Oro</button>
-                </div>
-                <div class="shop-item">
-                    <span>🍦 Comer un postre/antojo</span>
-                    <button class="btn-buy">🪙 50 Oro</button>
+            <form id="register-form" class="auth-form" style="display:none;">
+                <input type="text" id="register-name" placeholder="Nombre de jugador" required>
+                <input type="email" id="register-email" placeholder="Email" required>
+                <input type="password" id="register-password" placeholder="Contraseña (mín. 6 caracteres)" required minlength="6">
+                <button type="submit" class="auth-submit">Crear Cuenta</button>
+                <div id="register-error" class="auth-error"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PANTALLA PRINCIPAL (oculta hasta hacer login) -->
+    <div id="app-screen" class="app-screen" style="display:none;">
+        <header class="player-dashboard">
+            <div class="profile-info">
+                <div class="avatar">🧙‍♂️</div>
+                <div>
+                    <h2 id="player-name">Cargando Jugador...</h2>
+                    <div class="level-badge">Nivel <span id="player-level">1</span></div>
                 </div>
             </div>
-        </section>
-    </main>
+            
+            <div class="stats">
+                <div class="stat-bar-container">
+                    <span class="stat-label">XP: <span id="xp-text">0/100</span></span>
+                    <div class="stat-bar"><div id="xp-fill" class="fill xp" style="width: 0%"></div></div>
+                </div>
+                <div class="gold-container">
+                    <span class="gold-icon">🪙</span> <span id="player-gold">0</span> Oro
+                </div>
+                <button id="btn-logout" class="btn-logout">Salir</button>
+            </div>
+        </header>
+
+        <main class="main-container">
+            <section class="habits-section">
+                <h3>⚔️ Tus Misiones Diarias (Hábitos)</h3>
+                
+                <form id="habit-form" class="habit-form">
+                    <input type="text" id="habit-name" placeholder="Nueva misión (ej: Leer 15 min)" required>
+                    <select id="habit-difficulty">
+                        <option value="FACIL">Fácil (10 XP)</option>
+                        <option value="MEDIA">Media (20 XP)</option>
+                        <option value="DIFICIL">Difícil (40 XP)</option>
+                    </select>
+                    <button type="submit">+ Añadir</button>
+                </form>
+                <ul id="habits-list" class="habits-list"></ul>
+            </section>
+
+            <section class="shop-section">
+                <h3>🏪 Tienda de Recompensas</h3>
+                <div class="shop-items">
+                    <div class="shop-item">
+                        <span>📺 Ver 1 capítulo de Netflix</span>
+                        <button class="btn-buy" data-producto="Netflix" data-costo="30">🪙 30 Oro</button>
+                    </div>
+                    <div class="shop-item">
+                        <span>🍦 Comer un postre/antojo</span>
+                        <button class="btn-buy" data-producto="Postre" data-costo="50">🪙 50 Oro</button>
+                    </div>
+                    <div class="shop-item">
+                        <span>🎮 1 hora de videojuegos</span>
+                        <button class="btn-buy" data-producto="Videojuegos" data-costo="40">🪙 40 Oro</button>
+                    </div>
+                    <div class="shop-item">
+                        <span>🛒 Compra libre (sorpresa)</span>
+                        <button class="btn-buy" data-producto="Compra libre" data-costo="80">🪙 80 Oro</button>
+                    </div>
+                </div>
+                <div id="shop-message" class="shop-message"></div>
+            </section>
+        </main>
+    </div>
 
     <script src="app.js"></script>
 </body>
