@@ -1,0 +1,22 @@
+{
+  "name": "HabitLife - Gestor Inteligente de Habitats",
+  "short_name": "HabitLife",
+  "description": "Convierte tus habitos en misiones RPG. Sube de nivel, gana oro y compra recompensas.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0b0f",
+  "theme_color": "#a855f7",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

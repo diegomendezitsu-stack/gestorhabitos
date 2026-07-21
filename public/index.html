@@ -1,12 +1,23 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HabitRPG - Gestor de Hábitos 🎮</title>
+    <title>HabitLife - Gestor de Habitats</title>
     <link rel="stylesheet" href="diseno-profesional.css">
 </head>
 <body>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- CONFETTI CANVAS -->
+    <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
 
     <!-- PANTALLA DE AUTENTICACIÓN -->
     <div id="auth-screen" class="auth-screen">
@@ -14,7 +25,7 @@
             <div class="auth-header">
                 <span class="auth-icon">🧙‍♂️</span>
                 <h1>HabitLife</h1>
-                <p>Gestor Inteligente de Hábitos</p>
+                <p>Gestor Inteligente de Habitats</p>
             </div>
 
             <div class="auth-tabs">
@@ -22,30 +33,63 @@
                 <button class="auth-tab" data-tab="register">Registrarse</button>
             </div>
 
-            <form id="login-form" class="auth-form">
-                <input type="email" id="login-email" placeholder="Email" required>
-                <input type="password" id="login-password" placeholder="Contraseña" required>
-                <button type="submit" class="auth-submit">Entrar</button>
+            <form id="login-form" class="auth-form" novalidate>
+                <div class="input-group">
+                    <input type="email" id="login-email" placeholder=" " required>
+                    <label>Email</label>
+                    <span class="input-error" id="login-email-error"></span>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="login-password" placeholder=" " required>
+                    <label>Contraseña</label>
+                    <span class="input-error" id="login-password-error"></span>
+                </div>
+                <button type="submit" class="auth-submit" id="login-btn">
+                    <span class="btn-text">Entrar</span>
+                    <span class="btn-spinner" style="display:none;"></span>
+                </button>
                 <div id="login-error" class="auth-error"></div>
             </form>
 
-            <form id="register-form" class="auth-form" style="display:none;">
-                <input type="text" id="register-name" placeholder="Nombre de jugador" required>
-                <input type="email" id="register-email" placeholder="Email" required>
-                <input type="password" id="register-password" placeholder="Contraseña (mín. 6 caracteres)" required minlength="6">
-                <button type="submit" class="auth-submit">Crear Cuenta</button>
+            <form id="register-form" class="auth-form" style="display:none;" novalidate>
+                <div class="input-group">
+                    <input type="text" id="register-name" placeholder=" " required minlength="2">
+                    <label>Nombre de jugador</label>
+                    <span class="input-error" id="register-name-error"></span>
+                </div>
+                <div class="input-group">
+                    <input type="email" id="register-email" placeholder=" " required>
+                    <label>Email</label>
+                    <span class="input-error" id="register-email-error"></span>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="register-password" placeholder=" " required minlength="8">
+                    <label>Contraseña</label>
+                    <span class="input-error" id="register-password-error"></span>
+                </div>
+                <ul class="password-rules" id="password-rules">
+                    <li data-rule="length">Mínimo 8 caracteres</li>
+                    <li data-rule="upper">1 mayúscula</li>
+                    <li data-rule="lower">1 minúscula</li>
+                    <li data-rule="number">1 número</li>
+                    <li data-rule="symbol">1 símbolo (!@#$%^&*)</li>
+                </ul>
+                <button type="submit" class="auth-submit" id="register-btn">
+                    <span class="btn-text">Crear Cuenta</span>
+                    <span class="btn-spinner" style="display:none;"></span>
+                </button>
                 <div id="register-error" class="auth-error"></div>
             </form>
         </div>
     </div>
 
-    <!-- PANTALLA PRINCIPAL (oculta hasta hacer login) -->
+    <!-- PANTALLA PRINCIPAL -->
     <div id="app-screen" class="app-screen" style="display:none;">
         <header class="player-dashboard">
             <div class="profile-info">
                 <div class="avatar">🧙‍♂️</div>
                 <div>
-                    <h2 id="player-name">Cargando Jugador...</h2>
+                    <h2 id="player-name">Cargando...</h2>
                     <div class="level-badge">Nivel <span id="player-level">1</span></div>
                 </div>
             </div>
@@ -58,29 +102,33 @@
                 <div class="gold-container">
                     <span class="gold-icon">🪙</span> <span id="player-gold">0</span> Oro
                 </div>
+                <button id="btn-theme" class="btn-icon" title="Cambiar tema">🌙</button>
                 <button id="btn-logout" class="btn-logout">Salir</button>
             </div>
         </header>
 
         <main class="main-container">
             <section class="habits-section">
-                <h3>⚔️ Tus Misiones Diarias (Hábitos)</h3>
+                <h3>⚔️ Tus Misiones Diarias</h3>
                 
-                <form id="habit-form" class="habit-form">
-                    <input type="text" id="habit-name" placeholder="Nueva misión (ej: Leer 15 min)" required>
+                <form id="habit-form" class="habit-form" novalidate>
+                    <input type="text" id="habit-name" placeholder="Nueva misión (ej: Leer 15 min)" required minlength="2">
                     <select id="habit-difficulty">
                         <option value="FACIL">Fácil (10 XP)</option>
                         <option value="MEDIA">Media (20 XP)</option>
                         <option value="DIFICIL">Difícil (40 XP)</option>
                     </select>
-                    <button type="submit">+ Añadir</button>
+                    <button type="submit" id="add-habit-btn">
+                        <span class="btn-text">+ Añadir</span>
+                        <span class="btn-spinner" style="display:none;"></span>
+                    </button>
                 </form>
                 <ul id="habits-list" class="habits-list"></ul>
             </section>
 
             <section class="shop-section">
                 <h3>🏪 Tienda de Recompensas</h3>
-                <div class="shop-items">
+                <div class="shop-items" id="shop-items">
                     <div class="shop-item">
                         <span>📺 Ver 1 capítulo de Netflix</span>
                         <button class="btn-buy" data-producto="Netflix" data-costo="30">🪙 30 Oro</button>
@@ -98,7 +146,6 @@
                         <button class="btn-buy" data-producto="Compra libre" data-costo="80">🪙 80 Oro</button>
                     </div>
                 </div>
-                <div id="shop-message" class="shop-message"></div>
             </section>
         </main>
     </div>

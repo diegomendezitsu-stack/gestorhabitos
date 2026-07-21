@@ -1,6 +1,6 @@
 const pool = require('../config/db');
 
-exports.getHabits = async (req, res) => {
+exports.getHabits = async (req, res, next) => {
   try {
     const result = await pool.query(
       'SELECT * FROM habitos WHERE usuario_id = $1 AND activo = TRUE ORDER BY created_at DESC',
@@ -8,17 +8,12 @@ exports.getHabits = async (req, res) => {
     );
     res.json(result.rows);
   } catch (error) {
-    console.error('Error al obtener hábitos:', error);
-    res.status(500).json({ error: 'Error al obtener hábitos.' });
+    next(error);
   }
 };
 
-exports.createHabit = async (req, res) => {
+exports.createHabit = async (req, res, next) => {
   const { nombre, dificultad, frecuencia } = req.body;
-
-  if (!nombre || !dificultad) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios (nombre, dificultad).' });
-  }
 
   try {
     const result = await pool.query(
@@ -28,12 +23,11 @@ exports.createHabit = async (req, res) => {
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error('Error al crear hábito:', error);
-    res.status(500).json({ error: 'Error al crear el hábito.' });
+    next(error);
   }
 };
 
-exports.updateHabit = async (req, res) => {
+exports.updateHabit = async (req, res, next) => {
   const { id } = req.params;
   const { nombre, dificultad, frecuencia } = req.body;
 
@@ -63,17 +57,16 @@ exports.updateHabit = async (req, res) => {
     );
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error al actualizar hábito:', error);
-    res.status(500).json({ error: 'Error al actualizar el hábito.' });
+    next(error);
   }
 };
 
-exports.deleteHabit = async (req, res) => {
+exports.deleteHabit = async (req, res, next) => {
   const { id } = req.params;
 
   try {
     const existing = await pool.query(
-      'SELECT * FROM habitos WHERE id = $1 AND usuario_id = $2',
+      'SELECT * FROM habitos WHERE id = $1 AND usuario_id = $2 AND activo = TRUE',
       [id, req.usuario.id]
     );
     if (existing.rows.length === 0) {
@@ -86,12 +79,11 @@ exports.deleteHabit = async (req, res) => {
     );
     res.json({ mensaje: 'Hábito eliminado correctamente.' });
   } catch (error) {
-    console.error('Error al eliminar hábito:', error);
-    res.status(500).json({ error: 'Error al eliminar el hábito.' });
+    next(error);
   }
 };
 
-exports.completeHabit = async (req, res) => {
+exports.completeHabit = async (req, res, next) => {
   const { id } = req.params;
 
   try {
@@ -104,6 +96,18 @@ exports.completeHabit = async (req, res) => {
     }
 
     const habito = habitoResult.rows[0];
+
+    if (habito.ultima_vez_cumplido) {
+      const yaCompletadoHoy = await pool.query(
+        `SELECT 1 FROM habitos
+         WHERE id = $1 AND ultima_vez_cumplido::date = CURRENT_DATE`,
+        [id]
+      );
+      if (yaCompletadoHoy.rows.length > 0) {
+        return res.status(400).json({ error: 'Ya completaste este hábito hoy. Vuelve mañana.' });
+      }
+    }
+
     const usuarioResult = await pool.query('SELECT * FROM usuarios WHERE id = $1', [req.usuario.id]);
     const usuario = usuarioResult.rows[0];
 
@@ -143,7 +147,7 @@ exports.completeHabit = async (req, res) => {
     const u = updatedUser.rows[0];
 
     res.json({
-      mensaje: '¡Hábito completado! 💪🎮',
+      mensaje: '¡Hábito completado!',
       recompensas: { xpGanada, oroGanado },
       estadoUsuario: {
         nombre: u.nombre,
@@ -155,7 +159,6 @@ exports.completeHabit = async (req, res) => {
       subioDeNivel
     });
   } catch (error) {
-    console.error('Error al completar hábito:', error);
-    res.status(500).json({ error: 'Error al completar el hábito.' });
+    next(error);
   }
 };

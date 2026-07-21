@@ -1,240 +1,537 @@
 const API_URL = 'http://localhost:5000/api';
 
-// Estado
 let token = localStorage.getItem('habitlife_token') || null;
+let refreshToken = localStorage.getItem('habitlife_refresh') || null;
 
-// DOM
-const authScreen = document.getElementById('auth-screen');
-const appScreen = document.getElementById('app-screen');
-const loginForm = document.getElementById('login-form');
-const registerForm = document.getElementById('register-form');
-const loginError = document.getElementById('login-error');
-const registerError = document.getElementById('register-error');
-const habitsList = document.getElementById('habits-list');
-const habitForm = document.getElementById('habit-form');
-const playerName = document.getElementById('player-name');
-const playerLevel = document.getElementById('player-level');
-const playerGold = document.getElementById('player-gold');
-const xpText = document.getElementById('xp-text');
-const xpFill = document.getElementById('xp-fill');
-const shopMessage = document.getElementById('shop-message');
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
 
-// ─── AUTH ────────────────────────────────────────────────
-document.querySelectorAll('.auth-tab').forEach(tab => {
+const loadingOverlay = $('#loading-overlay');
+const toastContainer = $('#toast-container');
+const confettiCanvas = $('#confetti-canvas');
+
+// ══════════════════════════════════════════════════════════════
+// TOAST SYSTEM
+// ══════════════════════════════════════════════════════════════
+function showToast(message, type = 'info', duration = 3500) {
+  const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span class="toast-icon">${icons[type]}</span><span>${message}</span>`;
+  toastContainer.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('removing');
+    toast.addEventListener('animationend', () => toast.remove());
+  }, duration);
+}
+
+// ══════════════════════════════════════════════════════════════
+// CONFETTI
+// ══════════════════════════════════════════════════════════════
+function fireConfetti() {
+  const ctx = confettiCanvas.getContext('2d');
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+
+  const particles = [];
+  const colors = ['#a855f7', '#f59e0b', '#10b981', '#ef4444', '#3b82f6', '#ec4899'];
+
+  for (let i = 0; i < 80; i++) {
+    particles.push({
+      x: Math.random() * confettiCanvas.width,
+      y: -20 - Math.random() * 100,
+      w: 6 + Math.random() * 6,
+      h: 4 + Math.random() * 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 4,
+      vy: 2 + Math.random() * 4,
+      rot: Math.random() * 360,
+      vr: (Math.random() - 0.5) * 10,
+      life: 1,
+    });
+  }
+
+  let frame;
+  function animate() {
+    ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    let alive = false;
+
+    particles.forEach((p) => {
+      if (p.life <= 0) return;
+      alive = true;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.1;
+      p.rot += p.vr;
+      p.life -= 0.008;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate((p.rot * Math.PI) / 180);
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+
+    if (alive) frame = requestAnimationFrame(animate);
+    else ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  }
+  animate();
+}
+
+// ══════════════════════════════════════════════════════════════
+// THEME
+// ══════════════════════════════════════════════════════════════
+const savedTheme = localStorage.getItem('habitlife_theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+updateThemeIcon(savedTheme);
+
+$('#btn-theme').addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('habitlife_theme', next);
+  updateThemeIcon(next);
+});
+
+function updateThemeIcon(theme) {
+  const btn = $('#btn-theme');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+
+// ══════════════════════════════════════════════════════════════
+// LOADING
+// ══════════════════════════════════════════════════════════════
+function showLoading() { loadingOverlay.classList.remove('hidden'); }
+function hideLoading() { loadingOverlay.classList.add('hidden'); }
+
+function setBtnLoading(btn, loading) {
+  if (!btn) return;
+  const text = btn.querySelector('.btn-text');
+  const spinner = btn.querySelector('.btn-spinner');
+  btn.disabled = loading;
+  if (text) text.style.opacity = loading ? '0' : '1';
+  if (spinner) spinner.style.display = loading ? 'inline-block' : 'none';
+}
+
+// ══════════════════════════════════════════════════════════════
+// AUTH TABS
+// ══════════════════════════════════════════════════════════════
+$$('.auth-tab').forEach((tab) => {
   tab.addEventListener('click', () => {
-    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    $$('.auth-tab').forEach((t) => t.classList.remove('active'));
     tab.classList.add('active');
-    if (tab.dataset.tab === 'login') {
-      loginForm.style.display = '';
-      registerForm.style.display = 'none';
-    } else {
-      loginForm.style.display = 'none';
-      registerForm.style.display = '';
-    }
+    const isLogin = tab.dataset.tab === 'login';
+    $('#login-form').style.display = isLogin ? '' : 'none';
+    $('#register-form').style.display = isLogin ? 'none' : '';
   });
 });
 
-loginForm.addEventListener('submit', async (e) => {
+// ══════════════════════════════════════════════════════════════
+// PASSWORD RULES LIVE
+// ══════════════════════════════════════════════════════════════
+const pwInput = $('#register-password');
+if (pwInput) {
+  pwInput.addEventListener('input', () => {
+    const v = pwInput.value;
+    $$('#password-rules li').forEach((li) => {
+      const rule = li.dataset.rule;
+      let pass = false;
+      if (rule === 'length') pass = v.length >= 8;
+      else if (rule === 'upper') pass = /[A-Z]/.test(v);
+      else if (rule === 'lower') pass = /[a-z]/.test(v);
+      else if (rule === 'number') pass = /[0-9]/.test(v);
+      else if (rule === 'symbol') pass = /[!@#$%^&*]/.test(v);
+      li.classList.toggle('valid', pass);
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// FORM VALIDATION
+// ══════════════════════════════════════════════════════════════
+function validateField(input, errorEl, rules) {
+  const val = input.value.trim();
+  let error = '';
+
+  for (const rule of rules) {
+    if (rule.required && !val) { error = rule.msg; break; }
+    if (rule.minLength && val.length < rule.minLength) { error = rule.msg; break; }
+    if (rule.pattern && !rule.pattern.test(val)) { error = rule.msg; break; }
+    if (rule.custom && !rule.custom(val)) { error = rule.msg; break; }
+  }
+
+  input.classList.toggle('error', !!error);
+  if (errorEl) errorEl.textContent = error;
+  return !error;
+}
+
+function clearErrors(form) {
+  form.querySelectorAll('.input-error').forEach((el) => (el.textContent = ''));
+  form.querySelectorAll('input.error').forEach((el) => el.classList.remove('error'));
+}
+
+// ══════════════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════════════
+$('#login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
+  clearErrors($('#login-form'));
+  const loginError = $('#login-error');
   loginError.textContent = '';
-  const email = document.getElementById('login-email').value;
-  const password = document.getElementById('login-password').value;
+
+  const email = $('#login-email');
+  const password = $('#login-password');
+
+  const emailOk = validateField(email, $('#login-email-error'), [
+    { required: true, msg: 'El email es obligatorio.' },
+    { pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, msg: 'Formato de email no válido.' },
+  ]);
+  const passOk = validateField(password, $('#login-password-error'), [
+    { required: true, msg: 'La contraseña es obligatoria.' },
+  ]);
+  if (!emailOk || !passOk) return;
+
+  const btn = $('#login-btn');
+  setBtnLoading(btn, true);
 
   try {
     const res = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email: email.value, password: password.value }),
     });
     const data = await res.json();
     if (!res.ok) { loginError.textContent = data.error; return; }
     token = data.token;
+    refreshToken = data.refreshToken;
     localStorage.setItem('habitlife_token', token);
+    localStorage.setItem('habitlife_refresh', refreshToken);
+    showToast(`Bienvenido, ${data.usuario.nombre}!`, 'success');
     showApp(data.usuario);
-  } catch (err) {
+  } catch {
     loginError.textContent = 'Error de conexión.';
+  } finally {
+    setBtnLoading(btn, false);
   }
 });
 
-registerForm.addEventListener('submit', async (e) => {
+$('#register-form').addEventListener('submit', async (e) => {
   e.preventDefault();
-  registerError.textContent = '';
-  const nombre = document.getElementById('register-name').value;
-  const email = document.getElementById('register-email').value;
-  const password = document.getElementById('register-password').value;
+  clearErrors($('#register-form'));
+  const regError = $('#register-error');
+  regError.textContent = '';
+
+  const name = $('#register-name');
+  const email = $('#register-email');
+  const password = $('#register-password');
+
+  const nameOk = validateField(name, $('#register-name-error'), [
+    { required: true, msg: 'El nombre es obligatorio.' },
+    { minLength: 2, msg: 'Mínimo 2 caracteres.' },
+    { pattern: /^[a-zA-ZáéíóúñÁÉÍÓÚÑ\s]+$/, msg: 'Solo letras y espacios.' },
+  ]);
+  const emailOk = validateField(email, $('#register-email-error'), [
+    { required: true, msg: 'El email es obligatorio.' },
+    { pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, msg: 'Formato de email no válido.' },
+  ]);
+  const passOk = validateField(password, $('#register-password-error'), [
+    { required: true, msg: 'La contraseña es obligatoria.' },
+    { minLength: 8, msg: 'Mínimo 8 caracteres.' },
+    { pattern: /[A-Z]/, msg: 'Falta una mayúscula.' },
+    { pattern: /[a-z]/, msg: 'Falta una minúscula.' },
+    { pattern: /[0-9]/, msg: 'Falta un número.' },
+    { pattern: /[!@#$%^&*]/, msg: 'Falta un símbolo (!@#$%^&*).' },
+  ]);
+  if (!nameOk || !emailOk || !passOk) return;
+
+  const btn = $('#register-btn');
+  setBtnLoading(btn, true);
 
   try {
     const res = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre, email, password })
+      body: JSON.stringify({ nombre: name.value, email: email.value, password: password.value }),
     });
     const data = await res.json();
-    if (!res.ok) { registerError.textContent = data.error; return; }
+    if (!res.ok) { regError.textContent = data.error; return; }
     token = data.token;
+    refreshToken = data.refreshToken;
     localStorage.setItem('habitlife_token', token);
+    localStorage.setItem('habitlife_refresh', refreshToken);
+    showToast(`Cuenta creada! Bienvenido, ${data.usuario.nombre}`, 'success');
     showApp(data.usuario);
-  } catch (err) {
-    registerError.textContent = 'Error de conexión.';
+  } catch {
+    regError.textContent = 'Error de conexión.';
+  } finally {
+    setBtnLoading(btn, false);
   }
 });
 
-document.getElementById('btn-logout').addEventListener('click', () => {
+$('#btn-logout').addEventListener('click', () => {
   token = null;
+  refreshToken = null;
   localStorage.removeItem('habitlife_token');
-  appScreen.style.display = 'none';
-  authScreen.style.display = '';
+  localStorage.removeItem('habitlife_refresh');
+  $('#app-screen').style.display = 'none';
+  $('#auth-screen').style.display = '';
+  showToast('Sesión cerrada.', 'info');
 });
 
-// ─── HEADERS ─────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// API HELPERS
+// ══════════════════════════════════════════════════════════════
 function authHeaders() {
-  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+  return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 }
 
-// ─── APP ─────────────────────────────────────────────────
+async function refreshAccessToken() {
+  if (!refreshToken) return false;
+  try {
+    const res = await fetch(`${API_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    token = data.token;
+    refreshToken = data.refreshToken;
+    localStorage.setItem('habitlife_token', token);
+    localStorage.setItem('habitlife_refresh', refreshToken);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function authFetch(url, options = {}) {
+  let res = await fetch(url, { ...options, headers: authHeaders() });
+  if (res.status === 401 && refreshToken) {
+    const refreshed = await refreshAccessToken();
+    if (refreshed) {
+      res = await fetch(url, { ...options, headers: authHeaders() });
+    } else {
+      token = null;
+      refreshToken = null;
+      localStorage.removeItem('habitlife_token');
+      localStorage.removeItem('habitlife_refresh');
+      location.reload();
+    }
+  }
+  return res;
+}
+
+// ══════════════════════════════════════════════════════════════
+// APP
+// ══════════════════════════════════════════════════════════════
 function showApp(usuario) {
-  authScreen.style.display = 'none';
-  appScreen.style.display = '';
+  $('#auth-screen').style.display = 'none';
+  $('#app-screen').style.display = '';
   updateUI(usuario);
   fetchHabits();
 }
 
 async function init() {
+  showLoading();
   if (token) {
     try {
-      const res = await fetch(`${API_URL}/habits`, { headers: authHeaders() });
+      const res = await authFetch(`${API_URL}/habits`);
       if (res.ok) {
         const habits = await res.json();
-        showApp({ nombre: habits[0] ? 'Jugador' : 'Nuevo Jugador', nivel: 1, xpActual: 0, xpNecesaria: 100, oroTotal: 0 });
+        const userRes = await authFetch(`${API_URL}/health`);
+        showApp({ nombre: 'Jugador', nivel: 1, xp: 0, xp_siguiente_nivel: 100, oro: 0 });
+        hideLoading();
         return;
       }
-    } catch (e) { /* token inválido */ }
+    } catch {}
   }
-  authScreen.style.display = '';
-  appScreen.style.display = 'none';
+  hideLoading();
+  $('#auth-screen').style.display = '';
+  $('#app-screen').style.display = 'none';
 }
 
-// ─── HABITS ──────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// HABITS
+// ══════════════════════════════════════════════════════════════
 async function fetchHabits() {
   try {
-    const res = await fetch(`${API_URL}/habits`, { headers: authHeaders() });
-    if (res.status === 401) { token = null; localStorage.removeItem('habitlife_token'); location.reload(); return; }
+    const res = await authFetch(`${API_URL}/habits`);
+    if (res.status === 401) return;
     const habits = await res.json();
-    habitsList.innerHTML = '';
+    const list = $('#habits-list');
+    list.innerHTML = '';
 
     if (habits.length === 0) {
-      habitsList.innerHTML = '<li class="habit-item" style="color:#64748b;justify-content:center;">No hay misiones activas. Crea una arriba!</li>';
+      list.innerHTML = '<li class="habits-empty">No hay misiones activas. Crea una arriba!</li>';
       return;
     }
 
-    habits.forEach(h => {
+    habits.forEach((h) => {
       const li = document.createElement('li');
       li.className = 'habit-item';
+      li.dataset.id = h.id;
       li.innerHTML = `
-        <div>
-          <strong>${h.nombre}</strong>
-          <span style="font-size:0.85rem;color:#94a3b8;">
-            Dificultad: <span style="color:#c084fc;font-weight:600;">${h.dificultad}</span> | Racha: ${h.racha_actual} dias
-          </span>
+        <div class="habit-info">
+          <strong>${escapeHtml(h.nombre)}</strong>
+          <div class="habit-meta">
+            <span class="habit-difficulty diff-${h.dificultad}">${h.dificultad}</span>
+            <span>🔥 ${h.racha_actual} días</span>
+          </div>
         </div>
-        <div style="display:flex;gap:8px;">
-          <button class="habit-btn" onclick="completeHabit(${h.id})">Logrado</button>
-          <button class="habit-btn-delete" onclick="deleteHabit(${h.id})" title="Eliminar">X</button>
+        <div class="habit-actions">
+          <button class="btn-complete" data-action="complete">Logrado</button>
+          <button class="btn-delete" data-action="delete" title="Eliminar">✕</button>
         </div>
       `;
-      habitsList.appendChild(li);
+      list.appendChild(li);
     });
   } catch (error) {
     console.error('Error al obtener habitos:', error);
   }
 }
 
-habitForm.addEventListener('submit', async (e) => {
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+$('#habit-form').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const nombreInput = document.getElementById('habit-name');
-  const dificultadSelect = document.getElementById('habit-difficulty');
-  if (!nombreInput || !dificultadSelect) return;
+  const nombreInput = $('#habit-name');
+  const dificultadSelect = $('#habit-difficulty');
+  const btn = $('#add-habit-btn');
+
+  if (!nombreInput.value.trim() || nombreInput.value.trim().length < 2) {
+    showToast('El nombre debe tener al menos 2 caracteres.', 'warning');
+    nombreInput.focus();
+    return;
+  }
+
+  setBtnLoading(btn, true);
 
   try {
-    const res = await fetch(`${API_URL}/habits`, {
+    const res = await authFetch(`${API_URL}/habits`, {
       method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({ nombre: nombreInput.value, dificultad: dificultadSelect.value })
+      body: JSON.stringify({ nombre: nombreInput.value.trim(), dificultad: dificultadSelect.value }),
     });
+    const data = await res.json();
     if (res.ok) {
-      habitForm.reset();
+      showToast('Misión creada!', 'success');
+      nombreInput.value = '';
       await fetchHabits();
+    } else {
+      showToast(data.error || 'Error al crear.', 'error');
     }
-  } catch (error) {
-    console.error('Error al crear:', error);
+  } catch {
+    showToast('Error de conexión.', 'error');
+  } finally {
+    setBtnLoading(btn, false);
   }
 });
 
-window.completeHabit = async (id) => {
-  try {
-    const res = await fetch(`${API_URL}/habits/${id}/complete`, { method: 'POST', headers: authHeaders() });
-    const data = await res.json();
-    if (data.subioDeNivel) alert('LEVEL UP! Has subido de nivel.');
-    if (data.estadoUsuario) updateUI(data.estadoUsuario);
-    await fetchHabits();
-  } catch (error) {
-    console.error('Error:', error);
-  }
-};
+// EVENT DELEGATION - Habits
+$('#habits-list').addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
 
-window.deleteHabit = async (id) => {
-  if (!confirm('Seguro que quieres eliminar esta mision?')) return;
-  try {
-    await fetch(`${API_URL}/habits/${id}`, { method: 'DELETE', headers: authHeaders() });
-    await fetchHabits();
-  } catch (error) {
-    console.error('Error:', error);
-  }
-};
+  const item = btn.closest('.habit-item');
+  const id = item?.dataset.id;
+  if (!id) return;
 
-// ─── UI UPDATE ───────────────────────────────────────────
+  if (btn.dataset.action === 'complete') {
+    btn.disabled = true;
+    try {
+      const res = await authFetch(`${API_URL}/habits/${id}/complete`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error, 'warning');
+        btn.disabled = false;
+        return;
+      }
+
+      item.classList.add('completing');
+      showToast(`+${data.recompensas.xpGanada} XP  +${data.recompensas.oroGanado} Oro`, 'success');
+
+      if (data.subioDeNivel) {
+        showToast(`LEVEL UP! Ahora eres Nivel ${data.estadoUsuario.nivel}`, 'success', 5000);
+        fireConfetti();
+      }
+
+      if (data.estadoUsuario) updateUI(data.estadoUsuario);
+      setTimeout(() => fetchHabits(), 500);
+    } catch {
+      showToast('Error de conexión.', 'error');
+      btn.disabled = false;
+    }
+  }
+
+  if (btn.dataset.action === 'delete') {
+    if (!confirm('Eliminar esta misión?')) return;
+    try {
+      await authFetch(`${API_URL}/habits/${id}`, { method: 'DELETE' });
+      showToast('Misión eliminada.', 'info');
+      await fetchHabits();
+    } catch {
+      showToast('Error de conexión.', 'error');
+    }
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+// UI UPDATE
+// ══════════════════════════════════════════════════════════════
 function updateUI(user) {
-  if (playerName) playerName.textContent = user.nombre;
-  if (playerLevel) playerLevel.textContent = user.nivel;
-  if (playerGold) playerGold.textContent = user.oroTotal ?? user.oro ?? 0;
-  if (xpText) xpText.textContent = `${user.xpActual ?? user.xp ?? 0} / ${user.xpNecesaria ?? user.xp_siguiente_nivel ?? 100} XP`;
-  if (xpFill) {
+  if ($('#player-name')) $('#player-name').textContent = user.nombre;
+  if ($('#player-level')) $('#player-level').textContent = user.nivel;
+  if ($('#player-gold')) $('#player-gold').textContent = user.oroTotal ?? user.oro ?? 0;
+  if ($('#xp-text')) $('#xp-text').textContent = `${user.xpActual ?? user.xp ?? 0} / ${user.xpNecesaria ?? user.xp_siguiente_nivel ?? 100} XP`;
+  if ($('#xp-fill')) {
     const xpAct = user.xpActual ?? user.xp ?? 0;
     const xpMax = user.xpNecesaria ?? user.xp_siguiente_nivel ?? 100;
-    xpFill.style.width = `${(xpAct / xpMax) * 100}%`;
+    $('#xp-fill').style.width = `${(xpAct / xpMax) * 100}%`;
   }
 }
 
-// ─── TIENDA ──────────────────────────────────────────────
-document.querySelectorAll('.btn-buy').forEach(btn => {
-  btn.addEventListener('click', async () => {
-    const producto = btn.dataset.producto;
-    const costo = parseInt(btn.dataset.costo);
+// ══════════════════════════════════════════════════════════════
+// SHOP - EVENT DELEGATION
+// ══════════════════════════════════════════════════════════════
+$('#shop-items').addEventListener('click', async (e) => {
+  const btn = e.target.closest('.btn-buy');
+  if (!btn) return;
 
-    shopMessage.textContent = '';
-    shopMessage.className = 'shop-message';
+  const producto = btn.dataset.producto;
+  const costo = parseInt(btn.dataset.costo);
 
-    try {
-      const res = await fetch(`${API_URL}/shop/comprar`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ producto, costo })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        shopMessage.textContent = data.error;
-        shopMessage.className = 'shop-message error';
-        return;
-      }
-      shopMessage.textContent = data.mensaje;
-      shopMessage.className = 'shop-message success';
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = '...';
+
+  try {
+    const res = await authFetch(`${API_URL}/shop/comprar`, {
+      method: 'POST',
+      body: JSON.stringify({ producto, costo }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error, 'error');
+    } else {
+      showToast(data.mensaje, 'success');
       if (data.estadoUsuario) updateUI(data.estadoUsuario);
-    } catch (error) {
-      shopMessage.textContent = 'Error de conexion.';
-      shopMessage.className = 'shop-message error';
     }
-  });
+  } catch {
+    showToast('Error de conexión.', 'error');
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 });
 
-// ─── BOOT ────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════════
 init();

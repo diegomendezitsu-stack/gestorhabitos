@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const logger = require('./logger');
 require('dotenv').config();
 
 const pool = new Pool({
@@ -14,9 +15,9 @@ const pool = new Pool({
 
 pool.query('SELECT NOW()', (err, res) => {
   if (err) {
-    console.error('Error al conectar a Supabase PostgreSQL:', err.stack);
+    logger.error('Error al conectar a Supabase PostgreSQL:', err.stack);
   } else {
-    console.log('Conexion exitosa a Supabase PostgreSQL:', res.rows[0].now);
+    logger.info('Conexion exitosa a Supabase PostgreSQL:', res.rows[0].now);
   }
 });
 

@@ -1,11 +1,7 @@
 const pool = require('../config/db');
 
-exports.comprar = async (req, res) => {
+exports.comprar = async (req, res, next) => {
   const { producto, costo } = req.body;
-
-  if (!producto || !costo) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios (producto, costo).' });
-  }
 
   try {
     const usuarioResult = await pool.query('SELECT * FROM usuarios WHERE id = $1', [req.usuario.id]);
@@ -28,7 +24,7 @@ exports.comprar = async (req, res) => {
     const u = updatedUser.rows[0];
 
     res.json({
-      mensaje: `¡Recompensa "${producto}" adquirida! 🎉`,
+      mensaje: `¡Recompensa "${producto}" adquirida!`,
       oroRestante: u.oro,
       estadoUsuario: {
         nombre: u.nombre,
@@ -39,12 +35,11 @@ exports.comprar = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error al comprar:', error);
-    res.status(500).json({ error: 'Error al procesar la compra.' });
+    next(error);
   }
 };
 
-exports.getHistorial = async (req, res) => {
+exports.getHistorial = async (req, res, next) => {
   try {
     const result = await pool.query(
       'SELECT * FROM transacciones_tienda WHERE usuario_id = $1 ORDER BY created_at DESC',
@@ -52,7 +47,6 @@ exports.getHistorial = async (req, res) => {
     );
     res.json(result.rows);
   } catch (error) {
-    console.error('Error al obtener historial:', error);
-    res.status(500).json({ error: 'Error al obtener historial.' });
+    next(error);
   }
 };
