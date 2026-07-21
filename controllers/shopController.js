@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { checkAndUnlockBadges } = require('../controllers/badgesController');
 
 exports.comprar = async (req, res, next) => {
   const { producto, costo } = req.body;
@@ -29,6 +30,8 @@ exports.comprar = async (req, res, next) => {
     );
     const u = updatedUser.rows[0];
 
+    const nuevosLogros = await checkAndUnlockBadges(req.usuario.id);
+
     res.json({
       mensaje: `¡Recompensa "${producto}" adquirida!`,
       oroRestante: u.oro,
@@ -38,7 +41,8 @@ exports.comprar = async (req, res, next) => {
         xpActual: u.xp,
         xpNecesaria: u.xp_siguiente_nivel,
         oroTotal: u.oro
-      }
+      },
+      nuevosLogros
     });
   } catch (error) {
     next(error);

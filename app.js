@@ -89,12 +89,16 @@ const habitRoutes = require('./routes/habitRoutes');
 const shopRoutes = require('./routes/shopRoutes');
 const statsRoutes = require('./routes/statsRoutes');
 const userRoutes = require('./routes/userRoutes');
+const resetRoutes = require('./routes/resetRoutes');
+const badgesRoutes = require('./routes/badgesRoutes');
 
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', resetRoutes);
 app.use('/api/habits', habitRoutes);
 app.use('/api/shop', shopRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/badges', badgesRoutes);
 
 // ═══ Health check ═══
 app.get('/api/health', (req, res) => {

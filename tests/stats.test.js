@@ -20,14 +20,11 @@ describe('GET /api/stats', () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('stats');
-    expect(res.body).toHaveProperty('badges');
-    expect(res.body).toHaveProperty('totalBadges');
     expect(res.body.stats.usuario).toHaveProperty('nivel');
     expect(res.body.stats.usuario).toHaveProperty('xp');
     expect(res.body.stats.usuario).toHaveProperty('oro');
     expect(res.body.stats).toHaveProperty('habitosActivos');
     expect(res.body.stats).toHaveProperty('rachaMaxima');
-    expect(Array.isArray(res.body.badges)).toBe(true);
   });
 
   it('debería rechazar sin token', async () => {

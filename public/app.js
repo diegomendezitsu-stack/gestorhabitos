@@ -139,6 +139,7 @@ $$('.nav-tab').forEach((tab) => {
     if (view === 'stats') loadStats();
     if (view === 'badges') loadBadges();
     if (view === 'profile') loadProfile();
+    if (view === 'shop') loadShopHistory();
   });
 });
 
@@ -435,7 +436,7 @@ $('#habit-form').addEventListener('submit', async (e) => {
       body: JSON.stringify({ nombre: nombreInput.value.trim(), dificultad: diffSelect.value, categoria: catSelect.value }),
     });
     const data = await res.json();
-    if (res.ok) { showToast('Mision creada!', 'success'); nombreInput.value = ''; playSound('complete'); await fetchHabits(); }
+    if (res.ok) { showToast('Mision creada!', 'success'); nombreInput.value = ''; playSound('complete'); showNewBadges(data.nuevosLogros); await fetchHabits(); }
     else showToast(data.error || 'Error al crear.', 'error');
   } catch { showToast('Error de conexion.', 'error'); }
   finally { setBtnLoading(btn, false); }
@@ -461,6 +462,7 @@ $('#habits-list').addEventListener('click', async (e) => {
         playSound('levelup'); fireConfetti();
       }
       if (data.estadoUsuario) updateUI(data.estadoUsuario);
+      showNewBadges(data.nuevosLogros);
       setTimeout(() => fetchHabits(), 500);
     } catch { showToast('Error de conexion.', 'error'); btn.disabled = false; }
   }
@@ -551,41 +553,52 @@ async function loadStats() {
 /* ══════════════════════════════════════════════════════════════
    BADGES
    ══════════════════════════════════════════════════════════════ */
-const ALL_BADGES = [
-  { id: 'first_habit', icono: '🌟', nombre: 'Primera Mision', desc: 'Crea tu primer habito' },
-  { id: 'five_habits', icono: '📚', nombre: 'Coleccionista', desc: 'Crea 5 habitos' },
-  { id: 'first_complete', icono: '✅', nombre: 'Primer Paso', desc: 'Completa tu primer habito' },
-  { id: 'streak_3', icono: '🔥', nombre: 'Constante', desc: 'Racha de 3 dias' },
-  { id: 'streak_7', icono: '💎', nombre: 'Imparable', desc: 'Racha de 7 dias' },
-  { id: 'streak_30', icono: '👑', nombre: 'Leyenda', desc: 'Racha de 30 dias' },
-  { id: 'level_5', icono: '⚔️', nombre: 'Aventurero', desc: 'Nivel 5' },
-  { id: 'level_10', icono: '🏆', nombre: 'Heroe', desc: 'Nivel 10' },
-  { id: 'level_25', icono: '🎖️', nombre: 'Maestro', desc: 'Nivel 25' },
-  { id: 'oro_100', icono: '💰', nombre: 'Ahorrista', desc: '100 de oro' },
-  { id: 'oro_500', icono: '🤑', nombre: 'Rico', desc: '500 de oro' },
-  { id: 'completions_10', icono: '🎯', nombre: 'Dedicado', desc: '10 completados' },
-  { id: 'completions_50', icono: '🏅', nombre: 'Veterano', desc: '50 completados' },
-  { id: 'completions_100', icono: '🌟', nombre: 'Maestro Absoluto', desc: '100 completados' },
-];
-
 async function loadBadges() {
   try {
-    const res = await authFetch(`${API_URL}/stats`);
+    const res = await authFetch(`${API_URL}/badges`);
     if (!res.ok) return;
     const data = await res.json();
-    const unlocked = new Set(data.badges.map((b) => b.id));
-    set('#badges-count', data.badges.length);
+    set('#badges-count', data.desbloqueados);
     set('#badges-total', data.totalBadges);
-    const grid = $('#badges-grid');
-    grid.innerHTML = ALL_BADGES.map((b) => {
-      const isUnlocked = unlocked.has(b.id);
-      return `<div class="badge-card ${isUnlocked ? 'unlocked' : 'locked'}" title="${b.desc}">
-        <span class="badge-icon">${b.icono}</span>
+    const unlocked = data.badges.filter(b => b.desbloqueado);
+    const locked = data.badges.filter(b => !b.desbloqueado);
+    const renderBadge = (b) => {
+      const fecha = b.desbloqueado_en ? new Date(b.desbloqueado_en).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+      if (b.desbloqueado) {
+        return `<div class="badge-card unlocked" title="${b.desc}">
+          <span class="badge-icon">${b.icono}</span>
+          <span class="badge-name">${b.nombre}</span>
+          <span class="badge-desc">${b.desc}</span>
+          <span class="badge-date">${fecha}</span>
+        </div>`;
+      }
+      let progressHtml = '';
+      if (b.progreso) {
+        const pct = Math.min(100, Math.round((b.progreso.actual / b.progreso.meta) * 100));
+        progressHtml = `<div class="badge-progress">
+          <div class="badge-progress-bar"><div class="badge-progress-fill" style="width:${pct}%"></div></div>
+          <span class="badge-progress-text">${b.progreso.actual} / ${b.progreso.meta}</span>
+        </div>`;
+      }
+      return `<div class="badge-card locked" title="${b.desc}">
+        <span class="badge-icon locked-icon">${b.icono}</span>
         <span class="badge-name">${b.nombre}</span>
-        <span class="badge-desc">${b.desc}</span>
+        <span class="badge-desc badge-req">${b.desc}</span>
+        ${progressHtml}
       </div>`;
-    }).join('');
+    };
+    const unlockedGrid = $('#badges-unlocked');
+    const lockedGrid = $('#badges-locked');
+    if (unlockedGrid) unlockedGrid.innerHTML = unlocked.length > 0 ? unlocked.map(renderBadge).join('') : '<p class="badges-empty">Aun no has desbloqueado ningun logro.</p>';
+    if (lockedGrid) lockedGrid.innerHTML = locked.length > 0 ? locked.map(renderBadge).join('') : '<p class="badges-empty">Felicidades! Desbloqueaste todos los logros!</p>';
   } catch {}
+}
+
+function showNewBadges(logros) {
+  if (!logros || logros.length === 0) return;
+  logros.forEach(b => {
+    showToast(`${b.icono} Logro desbloqueado: ${b.nombre}!`, 'success');
+  });
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -602,10 +615,32 @@ $('#shop-items').addEventListener('click', async (e) => {
     });
     const data = await res.json();
     if (!res.ok) { showToast(data.error, 'error'); }
-    else { showToast(data.mensaje, 'success'); playSound('buy'); if (data.estadoUsuario) updateUI(data.estadoUsuario); }
+    else { showToast(data.mensaje, 'success'); playSound('buy'); if (data.estadoUsuario) updateUI(data.estadoUsuario); showNewBadges(data.nuevosLogros); loadShopHistory(); }
   } catch { showToast('Error de conexion.', 'error'); }
   finally { btn.textContent = orig; btn.disabled = false; }
 });
+
+async function loadShopHistory() {
+  try {
+    const res = await authFetch(`${API_URL}/shop/historial`);
+    if (!res.ok) return;
+    const items = await res.json();
+    const container = $('#shop-history');
+    if (!container) return;
+    if (items.length === 0) {
+      container.innerHTML = '<p style="color:#888;text-align:center;">Aun no has reclamado recompensas.</p>';
+      return;
+    }
+    container.innerHTML = items.map(i => {
+      const fecha = new Date(i.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+      return `<div class="shop-history-item">
+        <span class="shop-history-producto">${escapeHtml(i.producto)}</span>
+        <span class="shop-history-costo">🪙 ${i.costo}</span>
+        <span class="shop-history-fecha">${fecha}</span>
+      </div>`;
+    }).join('');
+  } catch {}
+}
 
 /* ══════════════════════════════════════════════════════════════
    PROFILE

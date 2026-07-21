@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { checkAndUnlockBadges } = require('../controllers/badgesController');
 
 const CATEGORIAS = ['general', 'salud', 'estudio', 'trabajo', 'fitness', 'meditacion', 'lectura', 'creatividad', 'social', 'finanzas'];
 
@@ -40,7 +41,8 @@ exports.createHabit = async (req, res, next) => {
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
       [req.usuario.id, nombre, dificultad.toUpperCase(), frecuencia || 'DIARIO', cat]
     );
-    res.status(201).json(result.rows[0]);
+    const nuevosLogros = await checkAndUnlockBadges(req.usuario.id);
+    res.status(201).json({ ...result.rows[0], nuevosLogros });
   } catch (error) { next(error); }
 };
 
@@ -129,14 +131,12 @@ exports.completeHabit = async (req, res, next) => {
 
     const habito = habitoResult.rows[0];
 
-    if (habito.ultima_vez_cumplido) {
-      const yaCompletadoHoy = await pool.query(
-        'SELECT 1 FROM habitos WHERE id = $1 AND ultima_vez_cumplido::date = CURRENT_DATE',
-        [id]
-      );
-      if (yaCompletadoHoy.rows.length > 0) {
-        return res.status(400).json({ error: 'Ya completaste este habito hoy. Vuelve manana.' });
-      }
+    const yaCompletadoHoy = await pool.query(
+      'SELECT 1 FROM completaciones WHERE habito_id = $1 AND usuario_id = $2 AND completado_en::date = CURRENT_DATE',
+      [id, req.usuario.id]
+    );
+    if (yaCompletadoHoy.rows.length > 0) {
+      return res.status(400).json({ error: 'Ya completaste este habito hoy. Vuelve manana.' });
     }
 
     const usuarioResult = await pool.query(
@@ -178,11 +178,18 @@ exports.completeHabit = async (req, res, next) => {
       [nuevaRacha, mejorRacha, habito.id]
     );
 
+    await pool.query(
+      'INSERT INTO completaciones (habito_id, usuario_id) VALUES ($1, $2)',
+      [habito.id, req.usuario.id]
+    );
+
     const updatedUser = await pool.query(
       'SELECT nombre, nivel, xp, xp_siguiente_nivel, oro FROM usuarios WHERE id = $1',
       [req.usuario.id]
     );
     const u = updatedUser.rows[0];
+
+    const nuevosLogros = await checkAndUnlockBadges(req.usuario.id);
 
     res.json({
       mensaje: 'Habito completado!',
@@ -194,7 +201,8 @@ exports.completeHabit = async (req, res, next) => {
         xpNecesaria: u.xp_siguiente_nivel,
         oroTotal: u.oro
       },
-      subioDeNivel
+      subioDeNivel,
+      nuevosLogros
     });
   } catch (error) { next(error); }
 };
@@ -211,14 +219,13 @@ exports.undoComplete = async (req, res, next) => {
     }
 
     const habito = habitoResult.rows[0];
-    if (!habito.ultima_vez_cumplido) {
-      return res.status(400).json({ error: 'Este habito no tiene completaciones recientes.' });
-    }
 
-    const hoy = new Date();
-    const ultima = new Date(habito.ultima_vez_cumplido);
-    if (ultima.toDateString() !== hoy.toDateString()) {
-      return res.status(400).json({ error: 'Solo puedes deshacer la completacion de hoy.' });
+    const completacionHoy = await pool.query(
+      'SELECT id FROM completaciones WHERE habito_id = $1 AND usuario_id = $2 AND completado_en::date = CURRENT_DATE',
+      [habito.id, req.usuario.id]
+    );
+    if (completacionHoy.rows.length === 0) {
+      return res.status(400).json({ error: 'Este habito no tiene completaciones recientes.' });
     }
 
     let xpRestar = 10;
@@ -229,6 +236,11 @@ exports.undoComplete = async (req, res, next) => {
     await pool.query(
       'UPDATE usuarios SET xp = GREATEST(0, xp - $1), oro = GREATEST(0, oro - $2) WHERE id = $3',
       [xpRestar, oroRestar, req.usuario.id]
+    );
+
+    await pool.query(
+      'DELETE FROM completaciones WHERE habito_id = $1 AND usuario_id = $2 AND completado_en::date = CURRENT_DATE',
+      [habito.id, req.usuario.id]
     );
 
     await pool.query(

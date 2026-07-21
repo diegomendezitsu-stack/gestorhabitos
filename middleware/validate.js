@@ -101,6 +101,28 @@ const deleteAccountRules = [
   handleErrors,
 ];
 
+const requestResetRules = [
+  body('email')
+    .trim()
+    .notEmpty().withMessage('El email es obligatorio.')
+    .isEmail().withMessage('Formato de email no válido.')
+    .normalizeEmail(),
+  handleErrors,
+];
+
+const resetPasswordRules = [
+  body('token')
+    .notEmpty().withMessage('El token es obligatorio.'),
+  body('newPassword')
+    .notEmpty().withMessage('La contraseña es obligatoria.')
+    .isLength({ min: 8 }).withMessage('La contraseña debe tener mínimo 8 caracteres.')
+    .matches(/[A-Z]/).withMessage('La contraseña debe tener al menos una mayúscula.')
+    .matches(/[a-z]/).withMessage('La contraseña debe tener al menos una minúscula.')
+    .matches(/[0-9]/).withMessage('La contraseña debe tener al menos un número.')
+    .matches(/[!@#$%^&*]/).withMessage('La contraseña debe tener al menos un símbolo (!@#$%^&*).'),
+  handleErrors,
+];
+
 module.exports = {
   registerRules,
   loginRules,
@@ -109,4 +131,6 @@ module.exports = {
   shopRules,
   updateProfileRules,
   deleteAccountRules,
+  requestResetRules,
+  resetPasswordRules,
 };
