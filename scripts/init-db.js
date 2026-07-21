@@ -7,6 +7,7 @@ const SCHEMA = `
     nombre VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
+    avatar VARCHAR(10) DEFAULT '🧙‍♂️',
     nivel INTEGER DEFAULT 1,
     xp INTEGER DEFAULT 0,
     xp_siguiente_nivel INTEGER DEFAULT 100,
@@ -18,9 +19,11 @@ const SCHEMA = `
     id SERIAL PRIMARY KEY,
     usuario_id INTEGER NOT NULL,
     nombre VARCHAR(200) NOT NULL,
+    categoria VARCHAR(50) DEFAULT 'general',
     dificultad VARCHAR(20) CHECK (dificultad IN ('FACIL', 'MEDIA', 'DIFICIL')) DEFAULT 'FACIL',
     frecuencia VARCHAR(20) CHECK (frecuencia IN ('DIARIO', 'SEMANAL', 'MENSUAL')) DEFAULT 'DIARIO',
     racha_actual INTEGER DEFAULT 0,
+    mejor_racha INTEGER DEFAULT 0,
     ultima_vez_cumplido TIMESTAMP,
     activo BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -44,6 +47,10 @@ const SCHEMA = `
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
   );
+
+  ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS avatar VARCHAR(10) DEFAULT '🧙‍♂️';
+  ALTER TABLE habitos ADD COLUMN IF NOT EXISTS categoria VARCHAR(50) DEFAULT 'general';
+  ALTER TABLE habitos ADD COLUMN IF NOT EXISTS mejor_racha INTEGER DEFAULT 0;
 `;
 
 async function initDB() {

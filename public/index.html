@@ -2,92 +2,131 @@
 <html lang="es" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HabitLife - Gestor de Habitats</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="description" content="HabitLife - Convierte tus habitos en misiones RPG. Sube de nivel, gana oro y compra recompensas reales.">
+    <meta name="keywords" content="habitos, productividad, gamificacion, RPG, nivel, recompensas">
+    <meta name="author" content="HabitLife">
+    <meta name="theme-color" content="#a855f7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta property="og:title" content="HabitLife - Gestor de Habitats Gamificado">
+    <meta property="og:description" content="Convierte tus habitos en misiones RPG. Sube de nivel y gana recompensas.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://habitlife.app">
+    <meta property="og:image" content="/icons/icon-512.png">
+
+    <title>HabitLife - Gestor de Habitats Gamificado</title>
+    <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg">
+    <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="diseno-profesional.css">
 </head>
 <body>
+    <!-- SKIP NAV (accessibility) -->
+    <a href="#main-content" class="skip-nav">Saltar al contenido principal</a>
+
+    <!-- SPLASH SCREEN -->
+    <div id="splash" class="splash">
+        <div class="splash-content">
+            <div class="splash-icon">⚔️</div>
+            <h1 class="splash-title">HabitLife</h1>
+            <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+        </div>
+    </div>
 
     <!-- LOADING OVERLAY -->
-    <div id="loading-overlay" class="loading-overlay">
+    <div id="loading-overlay" class="loading-overlay hidden">
         <div class="spinner"></div>
     </div>
 
     <!-- TOAST CONTAINER -->
-    <div id="toast-container" class="toast-container"></div>
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
     <!-- CONFETTI CANVAS -->
     <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
 
-    <!-- PANTALLA DE AUTENTICACIÓN -->
+    <!-- SCROLL TO TOP -->
+    <button id="scroll-top" class="scroll-top" aria-label="Volver arriba">↑</button>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- AUTH SCREEN -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <div id="auth-screen" class="auth-screen">
         <div class="auth-card">
             <div class="auth-header">
-                <span class="auth-icon">🧙‍♂️</span>
+                <div class="auth-logo">
+                    <span class="auth-icon">⚔️</span>
+                </div>
                 <h1>HabitLife</h1>
-                <p>Gestor Inteligente de Habitats</p>
+                <p>Convierte habitos en misiones. Sube de nivel.</p>
             </div>
 
-            <div class="auth-tabs">
-                <button class="auth-tab active" data-tab="login">Iniciar Sesión</button>
-                <button class="auth-tab" data-tab="register">Registrarse</button>
+            <div class="auth-tabs" role="tablist">
+                <button class="auth-tab active" data-tab="login" role="tab" aria-selected="true">Entrar</button>
+                <button class="auth-tab" data-tab="register" role="tab" aria-selected="false">Crear Cuenta</button>
             </div>
 
+            <!-- LOGIN -->
             <form id="login-form" class="auth-form" novalidate>
                 <div class="input-group">
-                    <input type="email" id="login-email" placeholder=" " required>
-                    <label>Email</label>
-                    <span class="input-error" id="login-email-error"></span>
+                    <input type="email" id="login-email" placeholder=" " required autocomplete="email" aria-describedby="login-email-error">
+                    <label for="login-email">Email</label>
+                    <span class="input-error" id="login-email-error" role="alert"></span>
                 </div>
                 <div class="input-group">
-                    <input type="password" id="login-password" placeholder=" " required>
-                    <label>Contraseña</label>
-                    <span class="input-error" id="login-password-error"></span>
+                    <input type="password" id="login-password" placeholder=" " required autocomplete="current-password" aria-describedby="login-password-error">
+                    <label for="login-password">Contrasena</label>
+                    <span class="input-error" id="login-password-error" role="alert"></span>
                 </div>
-                <button type="submit" class="auth-submit" id="login-btn">
+                <button type="submit" class="auth-submit btn-full" id="login-btn">
                     <span class="btn-text">Entrar</span>
                     <span class="btn-spinner" style="display:none;"></span>
                 </button>
-                <div id="login-error" class="auth-error"></div>
+                <div id="login-error" class="auth-error" role="alert"></div>
             </form>
 
+            <!-- REGISTER -->
             <form id="register-form" class="auth-form" style="display:none;" novalidate>
                 <div class="input-group">
-                    <input type="text" id="register-name" placeholder=" " required minlength="2">
-                    <label>Nombre de jugador</label>
-                    <span class="input-error" id="register-name-error"></span>
+                    <input type="text" id="register-name" placeholder=" " required minlength="2" autocomplete="name" aria-describedby="register-name-error">
+                    <label for="register-name">Nombre de jugador</label>
+                    <span class="input-error" id="register-name-error" role="alert"></span>
                 </div>
                 <div class="input-group">
-                    <input type="email" id="register-email" placeholder=" " required>
-                    <label>Email</label>
-                    <span class="input-error" id="register-email-error"></span>
+                    <input type="email" id="register-email" placeholder=" " required autocomplete="email" aria-describedby="register-email-error">
+                    <label for="register-email">Email</label>
+                    <span class="input-error" id="register-email-error" role="alert"></span>
                 </div>
                 <div class="input-group">
-                    <input type="password" id="register-password" placeholder=" " required minlength="8">
-                    <label>Contraseña</label>
-                    <span class="input-error" id="register-password-error"></span>
+                    <input type="password" id="register-password" placeholder=" " required minlength="8" autocomplete="new-password" aria-describedby="register-password-error register-rules">
+                    <label for="register-password">Contrasena</label>
+                    <span class="input-error" id="register-password-error" role="alert"></span>
                 </div>
-                <ul class="password-rules" id="password-rules">
-                    <li data-rule="length">Mínimo 8 caracteres</li>
-                    <li data-rule="upper">1 mayúscula</li>
-                    <li data-rule="lower">1 minúscula</li>
-                    <li data-rule="number">1 número</li>
-                    <li data-rule="symbol">1 símbolo (!@#$%^&*)</li>
+                <ul class="password-rules" id="password-rules" aria-label="Requisitos de contrasena">
+                    <li data-rule="length">Minimo 8 caracteres</li>
+                    <li data-rule="upper">1 mayuscula</li>
+                    <li data-rule="lower">1 minuscula</li>
+                    <li data-rule="number">1 numero</li>
+                    <li data-rule="symbol">1 simbolo (!@#$%^&amp;*)</li>
                 </ul>
-                <button type="submit" class="auth-submit" id="register-btn">
+                <button type="submit" class="auth-submit btn-full" id="register-btn">
                     <span class="btn-text">Crear Cuenta</span>
                     <span class="btn-spinner" style="display:none;"></span>
                 </button>
-                <div id="register-error" class="auth-error"></div>
+                <div id="register-error" class="auth-error" role="alert"></div>
             </form>
+
+            <p class="auth-footer-text">Al continuar, aceptas los terminos de uso.</p>
         </div>
     </div>
 
-    <!-- PANTALLA PRINCIPAL -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- APP SCREEN -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <div id="app-screen" class="app-screen" style="display:none;">
         <header class="player-dashboard">
             <div class="profile-info">
-                <div class="avatar">🧙‍♂️</div>
+                <div id="player-avatar-header" class="avatar" aria-hidden="true">🧙‍♂️</div>
                 <div>
                     <h2 id="player-name">Cargando...</h2>
                     <div class="level-badge">Nivel <span id="player-level">1</span></div>
@@ -97,57 +136,201 @@
             <div class="stats">
                 <div class="stat-bar-container">
                     <span class="stat-label">XP: <span id="xp-text">0/100</span></span>
-                    <div class="stat-bar"><div id="xp-fill" class="fill xp" style="width: 0%"></div></div>
+                    <div class="stat-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div id="xp-fill" class="fill xp" style="width: 0%"></div></div>
                 </div>
-                <div class="gold-container">
-                    <span class="gold-icon">🪙</span> <span id="player-gold">0</span> Oro
+                <div class="gold-container" aria-label="Oro">
+                    <span class="gold-icon" aria-hidden="true">🪙</span> <span id="player-gold">0</span>
                 </div>
-                <button id="btn-theme" class="btn-icon" title="Cambiar tema">🌙</button>
+                <button id="btn-theme" class="btn-icon" title="Cambiar tema" aria-label="Cambiar tema entre oscuro y claro">🌙</button>
                 <button id="btn-logout" class="btn-logout">Salir</button>
             </div>
         </header>
 
-        <main class="main-container">
-            <section class="habits-section">
-                <h3>⚔️ Tus Misiones Diarias</h3>
-                
-                <form id="habit-form" class="habit-form" novalidate>
-                    <input type="text" id="habit-name" placeholder="Nueva misión (ej: Leer 15 min)" required minlength="2">
-                    <select id="habit-difficulty">
-                        <option value="FACIL">Fácil (10 XP)</option>
-                        <option value="MEDIA">Media (20 XP)</option>
-                        <option value="DIFICIL">Difícil (40 XP)</option>
-                    </select>
-                    <button type="submit" id="add-habit-btn">
-                        <span class="btn-text">+ Añadir</span>
-                        <span class="btn-spinner" style="display:none;"></span>
-                    </button>
-                </form>
-                <ul id="habits-list" class="habits-list"></ul>
-            </section>
+        <!-- NAV TABS -->
+        <nav class="nav-tabs" role="tablist">
+            <button class="nav-tab active" data-view="habits" role="tab">⚔️ Misiones</button>
+            <button class="nav-tab" data-view="stats" role="tab">📊 Estadisticas</button>
+            <button class="nav-tab" data-view="shop" role="tab">🏪 Tienda</button>
+            <button class="nav-tab" data-view="badges" role="tab">🏆 Logros</button>
+            <button class="nav-tab" data-view="profile" role="tab">👤 Perfil</button>
+        </nav>
 
-            <section class="shop-section">
-                <h3>🏪 Tienda de Recompensas</h3>
-                <div class="shop-items" id="shop-items">
-                    <div class="shop-item">
-                        <span>📺 Ver 1 capítulo de Netflix</span>
-                        <button class="btn-buy" data-producto="Netflix" data-costo="30">🪙 30 Oro</button>
+        <main id="main-content" class="main-container">
+            <!-- VIEW: HABITS -->
+            <div id="view-habits" class="view-panel active">
+                <section class="habits-section">
+                    <div class="section-header">
+                        <h3>⚔️ Tus Misiones Diarias</h3>
+                        <div class="section-actions">
+                            <select id="habit-filter-cat" class="filter-select" aria-label="Filtrar por categoria">
+                                <option value="">Todas</option>
+                            </select>
+                            <button id="btn-toggle-archived" class="btn-text-sm">Archivados</button>
+                        </div>
                     </div>
-                    <div class="shop-item">
-                        <span>🍦 Comer un postre/antojo</span>
-                        <button class="btn-buy" data-producto="Postre" data-costo="50">🪙 50 Oro</button>
+                    <form id="habit-form" class="habit-form" novalidate>
+                        <input type="text" id="habit-name" placeholder="Nueva mision (ej: Leer 15 min)" required minlength="2" aria-label="Nombre del habito">
+                        <select id="habit-difficulty" aria-label="Dificultad">
+                            <option value="FACIL">Facil (10 XP)</option>
+                            <option value="MEDIA">Media (20 XP)</option>
+                            <option value="DIFICIL">Dificil (40 XP)</option>
+                        </select>
+                        <select id="habit-category" aria-label="Categoria">
+                            <option value="general">General</option>
+                            <option value="salud">Salud</option>
+                            <option value="estudio">Estudio</option>
+                            <option value="trabajo">Trabajo</option>
+                            <option value="fitness">Fitness</option>
+                            <option value="meditacion">Meditacion</option>
+                            <option value="lectura">Lectura</option>
+                            <option value="creatividad">Creatividad</option>
+                            <option value="social">Social</option>
+                            <option value="finanzas">Finanzas</option>
+                        </select>
+                        <button type="submit" id="add-habit-btn">
+                            <span class="btn-text">+ Anadir</span>
+                            <span class="btn-spinner" style="display:none;"></span>
+                        </button>
+                    </form>
+                    <div id="habits-list-container">
+                        <ul id="habits-list" class="habits-list"></ul>
                     </div>
-                    <div class="shop-item">
-                        <span>🎮 1 hora de videojuegos</span>
-                        <button class="btn-buy" data-producto="Videojuegos" data-costo="40">🪙 40 Oro</button>
+                </section>
+            </div>
+
+            <!-- VIEW: STATS -->
+            <div id="view-stats" class="view-panel" style="display:none;">
+                <section class="stats-section">
+                    <h3>📊 Tu Progreso</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-card-icon">⚔️</span>
+                            <span class="stat-card-value" id="stat-level">1</span>
+                            <span class="stat-card-label">Nivel</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-card-icon">🔥</span>
+                            <span class="stat-card-value" id="stat-streak">0</span>
+                            <span class="stat-card-label">Racha Max</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-card-icon">✅</span>
+                            <span class="stat-card-value" id="stat-completed">0</span>
+                            <span class="stat-card-label">Completados</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-card-icon">🪙</span>
+                            <span class="stat-card-value" id="stat-gold">0</span>
+                            <span class="stat-card-label">Oro Total</span>
+                        </div>
                     </div>
-                    <div class="shop-item">
-                        <span>🛒 Compra libre (sorpresa)</span>
-                        <button class="btn-buy" data-producto="Compra libre" data-costo="80">🪙 80 Oro</button>
+                    <div class="heatmap-container">
+                        <h4>Actividad de los ultimos 7 dias</h4>
+                        <div id="heatmap" class="heatmap"></div>
                     </div>
-                </div>
-            </section>
+                </section>
+            </div>
+
+            <!-- VIEW: SHOP -->
+            <div id="view-shop" class="view-panel" style="display:none;">
+                <section class="shop-section">
+                    <h3>🏪 Tienda de Recompensas</h3>
+                    <p class="shop-subtitle">Canjea tu oro por recompensas reales</p>
+                    <div class="shop-items" id="shop-items">
+                        <div class="shop-item">
+                            <div class="shop-item-info">
+                                <span class="shop-item-icon">📺</span>
+                                <div>
+                                    <strong>Netflix</strong>
+                                    <small>Ver 1 capitulo</small>
+                                </div>
+                            </div>
+                            <button class="btn-buy" data-producto="Netflix" data-costo="30">🪙 30</button>
+                        </div>
+                        <div class="shop-item">
+                            <div class="shop-item-info">
+                                <span class="shop-item-icon">🍦</span>
+                                <div>
+                                    <strong>Postre</strong>
+                                    <small>Un antojo</small>
+                                </div>
+                            </div>
+                            <button class="btn-buy" data-producto="Postre" data-costo="50">🪙 50</button>
+                        </div>
+                        <div class="shop-item">
+                            <div class="shop-item-info">
+                                <span class="shop-item-icon">🎮</span>
+                                <div>
+                                    <strong>Videojuegos</strong>
+                                    <small>1 hora</small>
+                                </div>
+                            </div>
+                            <button class="btn-buy" data-producto="Videojuegos" data-costo="40">🪙 40</button>
+                        </div>
+                        <div class="shop-item">
+                            <div class="shop-item-info">
+                                <span class="shop-item-icon">🛒</span>
+                                <div>
+                                    <strong>Compra Libre</strong>
+                                    <small>Sorpresa</small>
+                                </div>
+                            </div>
+                            <button class="btn-buy" data-producto="Compra libre" data-costo="80">🪙 80</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- VIEW: BADGES -->
+            <div id="view-badges" class="view-panel" style="display:none;">
+                <section class="badges-section">
+                    <h3>🏆 Tus Logros</h3>
+                    <p class="badges-subtitle"><span id="badges-count">0</span> / <span id="badges-total">0</span> desbloqueados</p>
+                    <div id="badges-grid" class="badges-grid"></div>
+                </section>
+            </div>
+
+            <!-- VIEW: PROFILE -->
+            <div id="view-profile" class="view-panel" style="display:none;">
+                <section class="profile-section">
+                    <h3>👤 Tu Perfil</h3>
+                    <div class="profile-card">
+                        <div class="profile-avatar-row">
+                            <div class="profile-avatar" id="profile-avatar">🧙‍♂️</div>
+                            <button id="btn-change-avatar" class="btn-text-sm">Cambiar avatar</button>
+                        </div>
+                        <div id="avatar-picker" class="avatar-picker" style="display:none;"></div>
+                        <form id="profile-form" class="profile-form" novalidate>
+                            <div class="input-group">
+                                <input type="text" id="profile-name" placeholder=" " required minlength="2" aria-label="Nombre">
+                                <label for="profile-name">Nombre</label>
+                            </div>
+                            <button type="submit" class="btn-full">
+                                <span class="btn-text">Guardar Cambios</span>
+                                <span class="btn-spinner" style="display:none;"></span>
+                            </button>
+                        </form>
+                    </div>
+                    <div class="profile-actions">
+                        <button id="btn-export-data" class="btn-outline">📥 Exportar mis datos (JSON)</button>
+                        <button id="btn-delete-account" class="btn-danger">🗑️ Eliminar cuenta</button>
+                    </div>
+                </section>
+            </div>
         </main>
+
+        <!-- FOOTER -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <span class="footer-brand">⚔️ HabitLife</span>
+                <span class="footer-copy">&copy; 2026 &mdash; Gamifica tu vida</span>
+                <div class="footer-links">
+                    <a href="#" onclick="return false;">Terminos</a>
+                    <a href="#" onclick="return false;">Privacidad</a>
+                    <a href="#" onclick="return false;">Ayuda</a>
+                </div>
+            </div>
+        </footer>
     </div>
 
     <script src="app.js"></script>
