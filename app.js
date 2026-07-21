@@ -54,10 +54,12 @@ app.use(morgan('dev'));
 const authRoutes = require('./routes/authRoutes');
 const habitRoutes = require('./routes/habitRoutes');
 const shopRoutes = require('./routes/shopRoutes');
+const statsRoutes = require('./routes/statsRoutes');
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/habits', habitRoutes);
 app.use('/api/shop', shopRoutes);
+app.use('/api/stats', statsRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
