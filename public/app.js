@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api';
+const API_URL = `${window.location.origin}/api`;
 
 let token = localStorage.getItem('habitlife_token') || null;
 let refreshToken = localStorage.getItem('habitlife_refresh') || null;
@@ -323,9 +323,10 @@ function showApp(usuario) {
 async function init() {
   if (token) {
     try {
-      const res = await authFetch(`${API_URL}/habits`);
+      const res = await authFetch(`${API_URL}/user/profile`);
       if (res.ok) {
-        showApp({ nombre: 'Jugador', nivel: 1, xp: 0, xp_siguiente_nivel: 100, oro: 0 });
+        const user = await res.json();
+        showApp(user);
         return;
       }
     } catch {}
@@ -371,7 +372,7 @@ $('#habit-filter-cat')?.addEventListener('change', (e) => {
 async function fetchHabits() {
   try {
     populateCategoryFilter();
-    const url = showArchived ? `${API_URL}/habits?archived=true` : `${API_URL}/habits`;
+    const url = showArchived ? `${API_URL}/habits?archivados=true` : `${API_URL}/habits`;
     const res = await authFetch(url);
     if (res.status === 401) return;
     const allHabits = await res.json();
@@ -609,14 +610,19 @@ $('#shop-items').addEventListener('click', async (e) => {
 /* ══════════════════════════════════════════════════════════════
    PROFILE
    ══════════════════════════════════════════════════════════════ */
-const AVATARS = ['🧙‍♂️','🧝‍♀️','🧛','🦇','🤖','👾','🦊','🐺','🦁','🐲','🦉','🦅','🔥','⚡','💀','🎭','🥷','🧑‍🚀','🦸','🧶'];
+const AVATARS = [
+  '🧙‍♂️','🧙‍♀️','🦸‍♂️','🦸‍♀️','🧑‍🚀','🦹‍♂️','🦹‍♀️','🧑‍💻','👨‍🎨','👩‍🎨',
+  '🦊','🐱','🐶','🦁','🐯','🐼','🐨','🦄','🐙','🦋',
+  '🐲','🐉','🦅','🦉','🐺','🦝','🦌','🐢','🐬','🦈',
+  '🤖','👾','👽','🎭','🥷','🧑‍🏭','🧑‍🔬','🧑‍🍳','🧑‍🎓','🧑‍🎤',
+  '💀','👻','🎃','🔥','⚡','❄️','🌟','💎','🎲','🎯'
+];
 
 async function loadProfile() {
   try {
-    const res = await authFetch(`${API_URL}/users/me`);
+    const res = await authFetch(`${API_URL}/user/profile`);
     if (!res.ok) return;
-    const data = await res.json();
-    const user = data.usuario;
+    const user = await res.json();
     $('#profile-avatar').textContent = user.avatar || '🧙‍♂️';
     $('#profile-name').value = user.nombre;
     if (user.avatar) $('#player-avatar-header').textContent = user.avatar;
@@ -636,13 +642,18 @@ $('#avatar-picker')?.addEventListener('click', async (e) => {
   if (!btn) return;
   const avatar = btn.dataset.avatar;
   try {
-    const res = await authFetch(`${API_URL}/users/me`, {
+    const res = await authFetch(`${API_URL}/user/profile`, {
       method: 'PUT', body: JSON.stringify({ avatar }),
     });
     if (res.ok) {
+      const data = await res.json();
       $('#profile-avatar').textContent = avatar;
+      if (data.avatar) $('#player-avatar-header').textContent = data.avatar;
       $('#avatar-picker').style.display = 'none';
       showToast('Avatar actualizado!', 'success');
+    } else {
+      const err = await res.json().catch(() => ({}));
+      showToast(err.error || 'Error al actualizar avatar.', 'error');
     }
   } catch { showToast('Error de conexion.', 'error'); }
 });
@@ -652,20 +663,24 @@ $('#profile-form')?.addEventListener('submit', async (e) => {
   const nombre = $('#profile-name').value.trim();
   if (!nombre || nombre.length < 2) { showToast('Minimo 2 caracteres.', 'warning'); return; }
   try {
-    const res = await authFetch(`${API_URL}/users/me`, {
+    const res = await authFetch(`${API_URL}/user/profile`, {
       method: 'PUT', body: JSON.stringify({ nombre }),
     });
     if (res.ok) {
       const data = await res.json();
-      updateUI(data.usuario);
+      updateUI(data);
+      $('#profile-name').value = data.nombre;
       showToast('Perfil actualizado!', 'success');
+    } else {
+      const err = await res.json().catch(() => ({}));
+      showToast(err.error || 'Error al actualizar perfil.', 'error');
     }
   } catch { showToast('Error de conexion.', 'error'); }
 });
 
 $('#btn-export-data')?.addEventListener('click', async () => {
   try {
-    const res = await authFetch(`${API_URL}/users/me/export`);
+    const res = await authFetch(`${API_URL}/user/export`);
     if (!res.ok) return;
     const data = await res.json();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -682,7 +697,7 @@ $('#btn-delete-account')?.addEventListener('click', async () => {
   const confirm2 = prompt('Escribe ELIMINAR para confirmar:');
   if (confirm2 !== 'ELIMINAR') { showToast('Cancelado.', 'info'); return; }
   try {
-    const res = await authFetch(`${API_URL}/users/me`, { method: 'DELETE' });
+    const res = await authFetch(`${API_URL}/user/account`, { method: 'DELETE' });
     if (res.ok) {
       showToast('Cuenta eliminada.', 'info');
       token = null; refreshToken = null;

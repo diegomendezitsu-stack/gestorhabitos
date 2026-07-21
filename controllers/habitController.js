@@ -9,7 +9,7 @@ exports.getCategorias = (req, res) => {
 exports.getHabits = async (req, res, next) => {
   try {
     const { categoria, archivados } = req.query;
-    let query = 'SELECT * FROM habitos WHERE usuario_id = $1';
+    let query = 'SELECT id, nombre, categoria, dificultad, frecuencia, racha_actual, mejor_racha, ultima_vez_cumplido, activo, created_at FROM habitos WHERE usuario_id = $1';
     const params = [req.usuario.id];
 
     if (archivados === 'true') {
@@ -50,7 +50,7 @@ exports.updateHabit = async (req, res, next) => {
 
   try {
     const existing = await pool.query(
-      'SELECT * FROM habitos WHERE id = $1 AND usuario_id = $2',
+      'SELECT id FROM habitos WHERE id = $1 AND usuario_id = $2',
       [id, req.usuario.id]
     );
     if (existing.rows.length === 0) {
@@ -84,7 +84,7 @@ exports.deleteHabit = async (req, res, next) => {
   const { id } = req.params;
   try {
     const existing = await pool.query(
-      'SELECT * FROM habitos WHERE id = $1 AND usuario_id = $2 AND activo = TRUE',
+      'SELECT id FROM habitos WHERE id = $1 AND usuario_id = $2 AND activo = TRUE',
       [id, req.usuario.id]
     );
     if (existing.rows.length === 0) {
@@ -102,7 +102,7 @@ exports.restoreHabit = async (req, res, next) => {
   const { id } = req.params;
   try {
     const existing = await pool.query(
-      'SELECT * FROM habitos WHERE id = $1 AND usuario_id = $2 AND activo = FALSE',
+      'SELECT id FROM habitos WHERE id = $1 AND usuario_id = $2 AND activo = FALSE',
       [id, req.usuario.id]
     );
     if (existing.rows.length === 0) {
@@ -120,7 +120,7 @@ exports.completeHabit = async (req, res, next) => {
   const { id } = req.params;
   try {
     const habitoResult = await pool.query(
-      'SELECT * FROM habitos WHERE id = $1 AND usuario_id = $2 AND activo = TRUE',
+      'SELECT id, nombre, dificultad, frecuencia, racha_actual, mejor_racha, ultima_vez_cumplido FROM habitos WHERE id = $1 AND usuario_id = $2 AND activo = TRUE',
       [id, req.usuario.id]
     );
     if (habitoResult.rows.length === 0) {
@@ -139,7 +139,10 @@ exports.completeHabit = async (req, res, next) => {
       }
     }
 
-    const usuarioResult = await pool.query('SELECT * FROM usuarios WHERE id = $1', [req.usuario.id]);
+    const usuarioResult = await pool.query(
+      'SELECT nivel, xp, xp_siguiente_nivel, oro FROM usuarios WHERE id = $1',
+      [req.usuario.id]
+    );
     const usuario = usuarioResult.rows[0];
 
     let xpGanada = 10;
@@ -175,7 +178,10 @@ exports.completeHabit = async (req, res, next) => {
       [nuevaRacha, mejorRacha, habito.id]
     );
 
-    const updatedUser = await pool.query('SELECT * FROM usuarios WHERE id = $1', [req.usuario.id]);
+    const updatedUser = await pool.query(
+      'SELECT nombre, nivel, xp, xp_siguiente_nivel, oro FROM usuarios WHERE id = $1',
+      [req.usuario.id]
+    );
     const u = updatedUser.rows[0];
 
     res.json({
@@ -197,7 +203,7 @@ exports.undoComplete = async (req, res, next) => {
   const { id } = req.params;
   try {
     const habitoResult = await pool.query(
-      'SELECT * FROM habitos WHERE id = $1 AND usuario_id = $2 AND activo = TRUE',
+      'SELECT id, dificultad, racha_actual, mejor_racha, ultima_vez_cumplido FROM habitos WHERE id = $1 AND usuario_id = $2 AND activo = TRUE',
       [id, req.usuario.id]
     );
     if (habitoResult.rows.length === 0) {
@@ -230,7 +236,10 @@ exports.undoComplete = async (req, res, next) => {
       [habito.id]
     );
 
-    const updatedUser = await pool.query('SELECT * FROM usuarios WHERE id = $1', [req.usuario.id]);
+    const updatedUser = await pool.query(
+      'SELECT nombre, nivel, xp, xp_siguiente_nivel, oro FROM usuarios WHERE id = $1',
+      [req.usuario.id]
+    );
     const u = updatedUser.rows[0];
 
     res.json({

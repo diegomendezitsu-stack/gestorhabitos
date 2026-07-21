@@ -28,12 +28,4 @@ Desktop.ini
 build/
 dist/
 
-# C++ build files
-*.o
-*.obj
-*.exe
-*.out
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-Makefile
+

@@ -21,7 +21,10 @@ exports.getStats = async (req, res, next) => {
   try {
     const userId = req.usuario.id;
 
-    const userRes = await pool.query('SELECT * FROM usuarios WHERE id = $1', [userId]);
+    const userRes = await pool.query(
+      'SELECT nivel, xp, xp_siguiente_nivel, oro FROM usuarios WHERE id = $1',
+      [userId]
+    );
     const user = userRes.rows[0];
 
     const totalRes = await pool.query(

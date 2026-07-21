@@ -74,10 +74,39 @@ const shopRules = [
   handleErrors,
 ];
 
+const AVATARS = [
+  '🧙‍♂️','🧙‍♀️','🦸‍♂️','🦸‍♀️','🧑‍🚀','🦹‍♂️','🦹‍♀️','🧑‍💻','👨‍🎨','👩‍🎨',
+  '🦊','🐱','🐶','🦁','🐯','🐼','🐨','🦄','🐙','🦋',
+  '🐲','🐉','🦅','🦉','🐺','🦝','🦌','🐢','🐬','🦈',
+  '🤖','👾','👽','🎭','🥷','🧑‍🏭','🧑‍🔬','🧑‍🍳','🧑‍🎓','🧑‍🎤',
+  '💀','👻','🎃','🔥','⚡','❄️','🌟','💎','🎲','🎯'
+];
+
+const updateProfileRules = [
+  body('nombre')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 100 }).withMessage('El nombre debe tener entre 2 y 100 caracteres.')
+    .matches(/^[a-zA-ZáéíóúñÁÉÍÓÚÑ\s]+$/).withMessage('El nombre solo puede contener letras y espacios.'),
+  body('avatar')
+    .optional()
+    .isIn(AVATARS).withMessage('Avatar no válido.'),
+  handleErrors,
+];
+
+const deleteAccountRules = [
+  body('confirmacion')
+    .notEmpty().withMessage('La confirmación es obligatoria.')
+    .equals('ELIMINAR').withMessage('Escribe ELIMINAR para confirmar.'),
+  handleErrors,
+];
+
 module.exports = {
   registerRules,
   loginRules,
   habitRules,
   idParamRules,
   shopRules,
+  updateProfileRules,
+  deleteAccountRules,
 };

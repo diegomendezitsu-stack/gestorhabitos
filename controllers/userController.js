@@ -1,6 +1,12 @@
 const pool = require('../config/db');
 
-const AVATARS = ['🧙‍♂️','🧙‍♀️','🦸‍♂️','🦸‍♀️','🧑‍🚀','🦹‍♂️','🦹‍♀️','🧑‍💻','👨‍🎨','👩‍🎨','🦊','🐱','🐶','🦁','🐯','🐼','🐨','🦄','🐙','🦋'];
+const AVATARS = [
+  '🧙‍♂️','🧙‍♀️','🦸‍♂️','🦸‍♀️','🧑‍🚀','🦹‍♂️','🦹‍♀️','🧑‍💻','👨‍🎨','👩‍🎨',
+  '🦊','🐱','🐶','🦁','🐯','🐼','🐨','🦄','🐙','🦋',
+  '🐲','🐉','🦅','🦉','🐺','🦝','🦌','🐢','🐬','🦈',
+  '🤖','👾','👽','🎭','🥷','🧑‍🏭','🧑‍🔬','🧑‍🍳','🧑‍🎓','🧑‍🎤',
+  '💀','👻','🎃','🔥','⚡','❄️','🌟','💎','🎲','🎯'
+];
 
 exports.getProfile = async (req, res, next) => {
   try {
@@ -16,21 +22,6 @@ exports.getProfile = async (req, res, next) => {
 exports.updateProfile = async (req, res, next) => {
   const { nombre, avatar } = req.body;
   try {
-    if (nombre !== undefined) {
-      if (typeof nombre !== 'string' || nombre.trim().length < 2 || nombre.trim().length > 100) {
-        return res.status(400).json({ error: 'El nombre debe tener entre 2 y 100 caracteres.' });
-      }
-      if (!/^[a-zA-ZáéíóúñÁÉÍÓÚÑ\s]+$/.test(nombre.trim())) {
-        return res.status(400).json({ error: 'El nombre solo puede contener letras y espacios.' });
-      }
-    }
-
-    if (avatar !== undefined) {
-      if (!AVATARS.includes(avatar)) {
-        return res.status(400).json({ error: 'Avatar no valido.' });
-      }
-    }
-
     const result = await pool.query(
       `UPDATE usuarios
        SET nombre = COALESCE($1, nombre),

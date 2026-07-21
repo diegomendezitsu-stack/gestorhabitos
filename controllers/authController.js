@@ -34,7 +34,10 @@ exports.login = async (req, res, next) => {
   const { email, password } = req.body;
 
   try {
-    const result = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
+    const result = await pool.query(
+      'SELECT id, nombre, email, password, nivel, xp, xp_siguiente_nivel, oro FROM usuarios WHERE email = $1',
+      [email]
+    );
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Credenciales incorrectas.' });
     }
@@ -49,19 +52,8 @@ exports.login = async (req, res, next) => {
     const token = jwt.sign({ id: usuario.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const refreshToken = jwt.sign({ id: usuario.id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
 
-    res.json({
-      token,
-      refreshToken,
-      usuario: {
-        id: usuario.id,
-        nombre: usuario.nombre,
-        email: usuario.email,
-        nivel: usuario.nivel,
-        xp: usuario.xp,
-        xp_siguiente_nivel: usuario.xp_siguiente_nivel,
-        oro: usuario.oro
-      }
-    });
+    const { password: _, ...usuarioSafe } = usuario;
+    res.json({ token, refreshToken, usuario: usuarioSafe });
   } catch (error) {
     next(error);
   }
